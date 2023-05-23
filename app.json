@@ -1,6 +1,7 @@
 {
   "expo": {
     "name": "melody-mentor",
+    "scheme": "melody-mentor",
     "slug": "melody-mentor",
     "version": "1.0.0",
     "orientation": "portrait",
