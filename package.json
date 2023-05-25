@@ -14,6 +14,8 @@
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "1.17.11",
+    "@react-native-firebase/app": "^17.5.0",
+    "@react-native-firebase/firestore": "^17.5.0",
     "@supabase/supabase-js": "^2.22.0",
     "expo": "~48.0.15",
     "expo-constants": "~14.2.1",
@@ -21,6 +23,7 @@
     "expo-linking": "~4.0.1",
     "expo-router": "^1.5.3",
     "expo-status-bar": "~1.4.4",
+    "firebase": "^9.22.0",
     "react": "18.2.0",
     "react-native": "0.71.7",
     "react-native-paper": "^5.8.0",
