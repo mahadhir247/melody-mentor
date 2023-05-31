@@ -69,9 +69,8 @@ function TabsSearch() {
         />
         <Button
           style={styles.filterButton}
-          contentStyle={styles.filterButtonContent}
           icon={() => <Ionicons name="filter" size={32} color="black" />}
-          onPress={() => router.push("/filter")}
+          onPress={() => router.push("search/filter")}
         />
       </View>
       <FlatList
@@ -98,21 +97,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   searchFilterContainer: {
-    alignItems: "center",
     flexDirection: "row",
     backgroundColor: "white",
+    justifyContent:"space-between",
   },
   searchBar: {
     borderRadius: 0,
-    flex: 7,
+    flex: 1,
     backgroundColor: "white",
   },
   filterButton: {
-    flex: 1,
-    borderRadius: 0,
-  },
-  filterButtonContent: {
-    padding: 10,
+    alignSelf:"center"
   },
   flatList: {
     paddingTop: 6,

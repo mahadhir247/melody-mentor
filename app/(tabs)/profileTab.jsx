@@ -1,10 +1,10 @@
 import { StyleSheet, Text, View } from "react-native";
 
-export default function Filter() {
+export default function Profile() {
   return (
     <View style={styles.container}>
       <View style={styles.main}>
-        <Text style={styles.title}>Filter Here</Text>
+        <Text style={styles.title}>Profile</Text>
       </View>
     </View>
   );
@@ -21,7 +21,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     maxWidth: 960,
     marginHorizontal: "auto",
-  },    
+  },
   title: {
     fontSize: 64,
     fontWeight: "bold",
