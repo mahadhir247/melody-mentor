@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { StyleSheet, FlatList, View, Text } from "react-native";
 import { Button, Searchbar } from "react-native-paper";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
-import { FIRESTORE_DB } from "../../../firebaseConfig";
+import { FIRESTORE_DB } from "../../firebaseConfig";
 import { collection, onSnapshot } from "firebase/firestore";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";

@@ -12,14 +12,14 @@ export default function Filter() {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => router.push("search/chords")}>
+      <TouchableOpacity onPress={() => router.push("search/filter/chords")}>
         <Card style={styles.content}>
           <Card.Content>
             <Title>Chords</Title>
           </Card.Content>
         </Card>
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => router.push("search/genres")}>
+      <TouchableOpacity onPress={() => router.push("search/filter/genres")}>
         <Card style={styles.content}>
           <Card.Content>
             <Title>Genres</Title>
