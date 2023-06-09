@@ -7,21 +7,32 @@ import { collection, onSnapshot } from "firebase/firestore";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 
+type Song = {
+  id: string;
+  title: string;
+  artist: string;
+};
+type SongProp = {
+  title: string;
+  artist: string;
+};
+
 function TabsSearch() {
   const router = useRouter();
   const [query, setQuery] = useState("");
-  const [songs, setSongs] = useState([]);
+  const [songs, setSongs] = useState<Song[]>([]);
 
   useEffect(() => {
     const songRef = collection(FIRESTORE_DB, "songs");
 
     const subscriber = onSnapshot(songRef, {
       next: (snapshot) => {
-        const songs = [];
+        const songs: Song[] = [];
         snapshot.docs.forEach((doc) => {
           songs.push({
             id: doc.id,
-            ...doc.data(),
+            title: doc.get("title"),
+            artist: doc.get("artist"),
           });
         });
         setSongs(songs);
@@ -31,30 +42,18 @@ function TabsSearch() {
     return () => subscriber();
   }, []);
 
-  function filterData(item) {
-    if (query === "") {
-      return (
-        <View style={styles.itemContainer}>
-          <Text style={styles.title}>{item.title}</Text>
-          <Text style={styles.subtitle}>{item.artist}</Text>
-        </View>
-      );
-    }
-
+  function filterData(item: Song) {
     if (
       item.title.toLowerCase().includes(query.toLowerCase()) ||
       item.artist.toLowerCase().includes(query.toLowerCase())
     ) {
-      return (
-        <View style={styles.itemContainer}>
-          <Text style={styles.title}>{item.title}</Text>
-          <Text style={styles.subtitle}>{item.artist}</Text>
-        </View>
-      );
+      return <Item title={item.title} artist={item.artist} />;
     }
+
+    return null;
   }
 
-  function onChangeSearch(query) {
+  function onChangeSearch(query: string) {
     setQuery(query);
   }
 
@@ -67,6 +66,8 @@ function TabsSearch() {
           onChangeText={onChangeSearch}
           value={query}
         />
+
+        {/* @ts-expect-error (Problem with react native paper components?) */}
         <Button
           style={styles.filterButton}
           icon={() => <Ionicons name="filter" size={32} color="black" />}
@@ -78,6 +79,15 @@ function TabsSearch() {
         renderItem={({ item }) => filterData(item)}
         contentContainerStyle={styles.flatList}
       />
+    </View>
+  );
+}
+
+function Item({ title, artist }: SongProp) {
+  return (
+    <View style={styles.itemContainer}>
+      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.subtitle}>{artist}</Text>
     </View>
   );
 }
@@ -99,7 +109,7 @@ const styles = StyleSheet.create({
   searchFilterContainer: {
     flexDirection: "row",
     backgroundColor: "white",
-    justifyContent:"space-between",
+    justifyContent: "space-between",
   },
   searchBar: {
     borderRadius: 0,
@@ -107,7 +117,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
   },
   filterButton: {
-    alignSelf:"center"
+    alignSelf: "center",
   },
   flatList: {
     paddingTop: 6,

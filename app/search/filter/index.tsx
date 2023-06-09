@@ -8,7 +8,7 @@ export default function Filter() {
   const router = useRouter();
   const [difficulty, setDifficulty] = useState([1, 5]);
 
-  const onDifficultyChange = (values) => setDifficulty(values);
+  const onDifficultyChange = (values: number[]) => setDifficulty(values);
 
   return (
     <View style={styles.container}>
