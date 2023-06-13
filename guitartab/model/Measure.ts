@@ -32,7 +32,7 @@ export class Measure {
   /**
    * The number of repetitions of the measure.
    */
-  public _numberOfRepetitions: number = 0;
+  public numberOfRepetitions: number = 0;
 
   /**
    * Numerator of the measure

@@ -5,6 +5,10 @@ export function readByte(data: ByteBuffer): number {
   return data.readByte();
 }
 
+export function skip(data: ByteBuffer, num: number): void {
+  data.skip(num);
+}
+
 export function readString(data: ByteBuffer, length: number): string {
   let b: Uint8Array = new Uint8Array(length);
   data.read(b, 0, b.length);
@@ -17,12 +21,17 @@ export function readString(data: ByteBuffer, length: number): string {
  * The string is represented literally in the binary file.
  * It is ensured the specified amount of bytes is read.
  */
-export function readStringByteLength(data: ByteBuffer, length: number): string {
-  let strLength: number = data.readByte();
-  let s: string = readString(data, strLength);
+export function readStringByteLength(
+  data: ByteBuffer,
+  expectedLength: number
+): string {
+  let realLength: number = data.readByte();
+  let s: string = "";
 
-  if (strLength < length) {
-    data.skip(length - strLength);
+  if (expectedLength != 0) {
+    s = readString(data, expectedLength);
+  } else {
+    s = readString(data, realLength);
   }
 
   return s;
@@ -76,4 +85,10 @@ export function readInt(data: ByteBuffer): number {
   let ch3: number = data.readByte();
   let ch4: number = data.readByte();
   return (ch4 << 24) | (ch3 << 16) | (ch2 << 8) | ch1;
+}
+
+export enum ValueSize {
+  Integer = 4,
+  ShortInt = 2,
+  Byte = 1,
 }

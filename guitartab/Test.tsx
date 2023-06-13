@@ -12,7 +12,6 @@ import { collection, onSnapshot } from "firebase/firestore";
 import { FIRESTORE_DB } from "../firebaseConfig";
 import { useEffect, useState } from "react";
 import { ByteBuffer } from "./ByteBuffer";
-import { readStringByteLength } from "./BinaryReader";
 import { GP3Importer } from "./GP3Importer";
 import { Score } from "./model/Score";
 
@@ -34,11 +33,14 @@ export default function OpenTabsTest() {
 
         const score: Score = test.readScore();
 
+        console.log('===========')
         console.log(score.author);
         console.log(score.title);
         console.log(score.tempo + " BPM");
         console.log(`Measures: ${score.numMeasures}`);
         console.log(`Tracks: ${score.numTracks}`);
+        console.log(`Time Signature: ${score.measures[0].numerator}/${score.measures[0].denominator}`);
+        console.log(score.tracks[1].name);
 
         setText(score.title);
       },

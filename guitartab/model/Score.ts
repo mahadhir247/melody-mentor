@@ -1,5 +1,6 @@
 import { MIDIChannel } from "./MIDIChannel";
 import { Measure } from "./Measure";
+import { Track } from "./Track";
 
 export class Score {
 
@@ -20,4 +21,5 @@ export class Score {
   public numTracks: number = 0;
 
   public measures: Measure[] = [];
+  public tracks: Track[] = [];
 }

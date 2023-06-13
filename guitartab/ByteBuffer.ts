@@ -143,9 +143,3 @@ export class ByteBuffer {
     return copy;
   }
 }
-
-export enum ValueSize {
-  Integer = 4,
-  ShortInt = 2,
-  Byte = 1
-}
