@@ -1,10 +1,12 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";import { collection, onSnapshot } from "firebase/firestore";
+import OpenTabsTest from "../../guitartab/Test"
 
 export default function Tabs() {
   return (
     <View style={styles.container}>
       <View style={styles.main}>
         <Text style={styles.title}>Tabs Here</Text>
+        <OpenTabsTest/>
       </View>
     </View>
   );
