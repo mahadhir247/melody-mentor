@@ -1,10 +1,11 @@
+import React from 'react';
 import { StyleSheet, Text, View } from "react-native";
 
-export default function Tabs() {
+export default function Profile() {
   return (
     <View style={styles.container}>
       <View style={styles.main}>
-        <Text style={styles.title}>Tabs Here</Text>
+        <Text style={styles.title}>Profile</Text>
       </View>
     </View>
   );

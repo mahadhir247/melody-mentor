@@ -1,18 +1,19 @@
+import React from 'react';
 import { useState } from "react";
 import { View, TouchableOpacity, FlatList, StyleSheet } from "react-native";
 import { Card, Checkbox, Title } from "react-native-paper";
-import GENRES from "./genreList";
+import CHORDS from "./chordsList";
 
-type GenreProps = {
+type ChordProps = {
   title: string;
   id: string;
 };
 
-export default function Genres() {
+export default function Chords() {
   return (
     <View style={styles.root}>
       <FlatList
-        data={GENRES}
+        data={CHORDS}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <Item title={item.title} id={item.id} />}
       />
@@ -20,7 +21,7 @@ export default function Genres() {
   );
 }
 
-function Item({ title, id }: GenreProps) {
+function Item({ title, id }: ChordProps) {
   const [checkedItems, setCheckedItems] = useState<string[]>([]);
 
   const isChecked = (id: string) => {
@@ -53,7 +54,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#ecf0f1",
   },
   content: {
-    flexDirection: "row",
     backgroundColor: "white",
+    flexDirection: "row",
   },
 });
