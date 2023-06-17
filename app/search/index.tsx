@@ -1,43 +1,19 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, FlatList, View, Text, TouchableOpacity } from "react-native";
-import { Button, Searchbar, Card, Title, Checkbox } from "react-native-paper";
+import { StyleSheet, FlatList, View, Text } from "react-native";
+import { Button, Searchbar } from "react-native-paper";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { FIRESTORE_DB } from "../../firebaseConfig";
 import { collection, onSnapshot } from "firebase/firestore";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
-import GENRES from "./filter/genres/genreList";
-import CHORDS from "./filter/chords/chordsList";
-import MultiSlider from "@ptomasroos/react-native-multi-slider";
-
-type Song = {
-  id: string;
-  title: string;
-  artist: string;
-  genres: string;
-  chords: string[];
-  difficulty: number;
-};
-type SongProp = {
-  title: string;
-  artist: string;
-};
-
-type GenreProps = {
-  title: string;
-  id: string;
-};
-
-type ChordProps = {
-  title: string;
-  id: string;
-};
+import { useFilter } from "./filterContext";
 
 function TabsSearch() {
   const router = useRouter();
   const [query, setQuery] = useState("");
-  const [songs, setSongs] = useState<Song[]>([]);
-  const [filteredSongs, setFilteredSongs] = useState<Song[]>([]);
+  const [songsAll, setSongsAll] = useState<Song[]>([]);
+
+  const { genres, chords, difficulty } = useFilter() as FilterContextType;
 
   useEffect(() => {
     const songRef = collection(FIRESTORE_DB, "songs");
@@ -52,86 +28,64 @@ function TabsSearch() {
             artist: doc.get("artist"),
             genres: doc.get("genres"),
             chords: doc.get("chords"),
-            difficulty: doc.get("difficulty")
+            difficulty: doc.get("difficulty"),
           });
         });
-        setSongs(songs);
-        // setFilteredSongs(songs);
+        setSongsAll(songs);
       },
     });
 
     return () => subscriber();
   }, []);
 
-  const [genres, setGenres] = useState<GenreProps[]>([]);
-  const toggleGenres = (id: GenreProps) => {
-    if (genres.includes(id)) {
-      setGenres(genres.filter((item) => item !== id));
-    } else {
-      setGenres([...genres, id]);
-    }
-  };
+  function filterSearch(song: Song): boolean {
+    return (
+      song.title.toLowerCase().includes(query.toLowerCase()) ||
+      song.artist.toLowerCase().includes(query.toLowerCase())
+    );
+  }
 
-  const [chords, setChords] = useState<ChordProps[]>([]);
-  const toggleChords = (id: ChordProps) => {
-    if (chords.includes(id)) {
-      setChords(chords.filter((item) => item !== id));
-    } else {
-      setChords([...chords, id]);
-    }
-  };
-
-  const [difficulty, setDifficulty] = useState([]);
-  const onDifficultyChange = (values: number[]) => setDifficulty(values);
-
-  const filterByGenres = (array: Song[]) => {
+  function filterGenres(song: Song): boolean {
     if (genres.length > 0) {
-      let tempArr = genres.map((id: GenreProps) => {
-        let temp = array.filter((item) => item.genres.includes(id.title));
-        return temp;
-      });
-
-      const uniqueGenres = Array.from(new Set(tempArr.flat()));
-      return uniqueGenres;
+      for (const genre of genres) {
+        if (song.genres == genre.title) {
+          return true;
+        }
+      }
+      return false;
     } else {
-      return array;
+      return true;
     }
   }
 
-  const filterByChords = (array: Song[]) => {
+  function filterChords(song: Song): boolean {
     if (chords.length > 0) {
-      let tempArr = chords.map((id: ChordProps) => {
-        let temp = array.filter((item) => item.chords.includes(id.title));
-        return temp;
-      });
-
-      const uniqueChords = Array.from(new Set(tempArr.flat()));
-      return uniqueChords;
+      for (const chordProp of chords) {
+        if (song.chords.includes(chordProp.title)) {
+          return true;
+        }
+      }
+      return false;
     } else {
-      return array;
+      return true;
     }
   }
 
-  const filterByDifficulty = (array: Song[]) => {
-    return array.filter((item) => item.difficulty >= difficulty[0] && item.difficulty <= difficulty[1]);
+  function filterDifficulty(song: Song): boolean {
+    return song.difficulty >= difficulty[0] && song.difficulty <= difficulty[1];
   }
 
-  const applyFilters = (array: Song[]) => {
-    const filteredGenres = filterByGenres(array);
-    const filteredChords = filterByChords(filteredGenres);
-    const filteredDifficulty = filterByDifficulty(filteredChords);
-    setFilteredSongs(filteredDifficulty);
-  }
-
-  function filterData(item: Song) {
+  function filterData(item: Song): React.JSX.Element {
     if (
-      item.title.toLowerCase().includes(query.toLowerCase()) ||
-      item.artist.toLowerCase().includes(query.toLowerCase())
+      filterChords(item) &&
+      filterGenres(item) &&
+      filterDifficulty(item) &&
+      filterSearch(item)
     ) {
       return <Item title={item.title} artist={item.artist} />;
     }
 
-    return null;
+    return <></>;
   }
 
   function onChangeSearch(query: string) {
@@ -156,56 +110,7 @@ function TabsSearch() {
         />
       </View>
       <FlatList
-        data={GENRES}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => {toggleGenres(item);}}>
-            <Card mode="contained">
-              <Card.Content style={styles.content}>
-                <Checkbox status={genres.includes(item) ? "checked" : "unchecked"} />
-                <Title>{item.title}</Title>
-              </Card.Content>
-            </Card>
-          </TouchableOpacity>
-        )}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-      />
-      <FlatList
-        data={CHORDS}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => {toggleChords(item);}}>
-            <Card mode="contained">
-              <Card.Content style={styles.content}>
-                <Checkbox
-                  status={chords.includes(item) ? "checked" : "unchecked"}
-                />
-                <Title>{item.title}</Title>
-              </Card.Content>
-            </Card>
-          </TouchableOpacity>
-        )}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-      />
-      <Card>
-        <Card.Content style={styles.sliderContent}>
-          <Title>Difficulty</Title>
-          <MultiSlider
-            values={[1, 5]}
-            onValuesChange={onDifficultyChange}
-            min={1}
-            max={5}
-            snapped
-            allowOverlap
-            enableLabel
-          />
-        </Card.Content>
-      </Card>
-      <Button mode="contained" onPress={() => applyFilters(songs)}>Apply Filters</Button>
-      <FlatList
-        data={filteredSongs}
+        data={songsAll}
         renderItem={({ item }) => filterData(item)}
         contentContainerStyle={styles.flatList}
       />
@@ -213,7 +118,7 @@ function TabsSearch() {
   );
 }
 
-function Item({ title, artist }: SongProp) {
+function Item({ title, artist }: SongProps) {
   return (
     <View style={styles.itemContainer}>
       <Text style={styles.title}>{title}</Text>
@@ -253,15 +158,6 @@ const styles = StyleSheet.create({
     paddingTop: 6,
     paddingBottom: 500,
   },
-  // itemContainer: {
-  //   backgroundColor: "white",
-  //   padding: 20,
-  //   marginVertical: 6,
-  //   marginHorizontal: 10,
-  //   borderRadius: 25,
-  //   borderColor: "black",
-  //   borderWidth: 2,
-  // },
   itemContainer: {
     backgroundColor: "white",
     padding: 20,
@@ -284,5 +180,5 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     flexDirection: "column",
     alignItems: "center",
-  }
+  },
 });

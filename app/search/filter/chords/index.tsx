@@ -1,12 +1,7 @@
-import { useState } from "react";
 import { View, TouchableOpacity, FlatList, StyleSheet } from "react-native";
 import { Card, Checkbox, Title } from "react-native-paper";
 import CHORDS from "./chordsList";
-
-type ChordProps = {
-  title: string;
-  id: string;
-};
+import { useFilter } from "../../filterContext";
 
 export default function Chords() {
   return (
@@ -20,27 +15,27 @@ export default function Chords() {
   );
 }
 
-function Item({ title, id }: ChordProps) {
-  const [checkedItems, setCheckedItems] = useState<string[]>([]);
+function Item(chord: ChordProps) {
+  const { setChords, chords } = useFilter() as FilterContextType;
 
-  const isChecked = (id: string) => {
-    return checkedItems.includes(id);
+  const isChecked = (chord: ChordProps) => {
+    return chords.filter(c => c.title === chord.title).length > 0;
   };
 
-  const toggleItem = (id: string) => {
-    if (isChecked(id)) {
-      setCheckedItems(checkedItems.filter((item) => item !== id));
+  const toggleChords = (chord: ChordProps) => {
+    if (isChecked(chord)) {
+      setChords(chords.filter((c) => c.title !== chord.title));
     } else {
-      setCheckedItems([...checkedItems, id]);
+      setChords([...chords, chord]);
     }
   };
 
   return (
-    <TouchableOpacity onPress={() => toggleItem(id)}>
+    <TouchableOpacity onPress={() => toggleChords(chord)}>
       <Card mode="contained">
         <Card.Content style={styles.content}>
-          <Checkbox status={isChecked(id) ? "checked" : "unchecked"} />
-          <Title>{title}</Title>
+          <Checkbox status={isChecked(chord) ? "checked" : "unchecked"} />
+          <Title>{chord.title}</Title>
         </Card.Content>
       </Card>
     </TouchableOpacity>
