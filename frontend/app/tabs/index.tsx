@@ -1,12 +1,87 @@
-import { StyleSheet, Text, View, Button } from "react-native";
+import { StyleSheet, Text, View, Button, Alert } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
+import { useEffect, useState } from "react";
+import { getStorage, ref, getDownloadURL } from "firebase/storage";
+import { Audio } from "expo-av";
+import * as FileSystem from "expo-file-system";
+import * as MediaLibrary from "expo-media-library";
 
 export default function Tabs() {
+  const fileDir = FileSystem.cacheDirectory + "tabs/";
+  const fileUri = fileDir + "Oasis - Wonderwall.wav";
+  const [audio, setAudio] = useState<Audio.Sound>();
+  const [url, setURL] = useState<string>();
+
+  const storage = getStorage();
+
+  async function playSound() {
+    await downloadFile(url as string);
+    const uri = FileSystem.cacheDirectory + "Oasis - Wonderwall.wav";
+
+    const { sound } = await Audio.Sound.createAsync({ uri: uri });
+    setAudio(sound);
+    await sound.playAsync();
+  }
+
+  async function stopSound() {
+    await audio?.stopAsync();
+  }
+
+  useEffect(() => {
+    async function getAudioData() {
+      let audioRef = ref(storage, "backend/output/Oasis - Wonderwall.wav");
+      const audioInfo = await getDownloadURL(audioRef);
+      setURL(audioInfo);
+    }
+
+    getAudioData();
+
+    return audio
+      ? () => {
+          console.log("Unloading Sound");
+          audio.unloadAsync();
+        }
+      : undefined;
+  }, [audio]);
+
+  async function downloadFile(url: string) {
+    const { status } = await MediaLibrary.requestPermissionsAsync();
+
+    if (status !== "granted") {
+      Alert.alert(
+        "Permission needed",
+        "This app requires access to your media library."
+      );
+      return;
+    }
+
+    const saveFile = async (fileUri: string) => {
+      const directoryInfo = await FileSystem.getInfoAsync(fileUri);
+      if (!directoryInfo.exists) {
+        await FileSystem.makeDirectoryAsync(fileUri, {
+          intermediates: true,
+        });
+      }
+    };
+
+    console.log("Starting Download");
+    FileSystem.downloadAsync(url, fileUri)
+      .then(({ uri }) => {
+        saveFile(uri);
+      })
+      .catch((e) => {
+        console.error(e);
+      });
+  }
+
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.safeAreaView}>
         <Header />
+        <Button title="Play" onPress={playSound} />
+        <Button title="Stop" onPress={stopSound} />
+
         <View style={styles.container}>
           <Measure />
           <Measure />
