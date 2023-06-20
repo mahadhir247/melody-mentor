@@ -1,15 +1,12 @@
-import React from 'react';
-import { useState } from "react";
 import { StyleSheet, View, TouchableOpacity } from "react-native";
 import { Card, Title } from "react-native-paper";
 import { useRouter } from "expo-router";
 import MultiSlider from "@ptomasroos/react-native-multi-slider";
+import { useFilter } from "../filterContext";
 
 export default function Filter() {
   const router = useRouter();
-  const [difficulty, setDifficulty] = useState([1, 5]);
-
-  const onDifficultyChange = (values: number[]) => setDifficulty(values);
+  const {setDifficulty, difficulty} = useFilter() as FilterContextType;
 
   return (
     <View style={styles.container}>
@@ -34,7 +31,7 @@ export default function Filter() {
 
           <MultiSlider
             values={[difficulty[0], difficulty[1]]}
-            onValuesChange={onDifficultyChange}
+            onValuesChange={(valueRange: number[]) => setDifficulty(valueRange)}
             min={1}
             max={5}
             snapped

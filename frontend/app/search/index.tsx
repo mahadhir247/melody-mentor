@@ -6,21 +6,14 @@ import { FIRESTORE_DB } from "../../firebaseConfig";
 import { collection, onSnapshot } from "firebase/firestore";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
-
-type Song = {
-  id: string;
-  title: string;
-  artist: string;
-};
-type SongProp = {
-  title: string;
-  artist: string;
-};
+import { useFilter } from "./filterContext";
 
 function TabsSearch() {
   const router = useRouter();
   const [query, setQuery] = useState("");
-  const [songs, setSongs] = useState<Song[]>([]);
+  const [songsAll, setSongsAll] = useState<Song[]>([]);
+
+  const { genres, chords, difficulty } = useFilter() as FilterContextType;
 
   useEffect(() => {
     const songRef = collection(FIRESTORE_DB, "songs");
@@ -33,24 +26,66 @@ function TabsSearch() {
             id: doc.id,
             title: doc.get("title"),
             artist: doc.get("artist"),
+            genres: doc.get("genres"),
+            chords: doc.get("chords"),
+            difficulty: doc.get("difficulty"),
           });
         });
-        setSongs(songs);
+        setSongsAll(songs);
       },
     });
 
     return () => subscriber();
   }, []);
 
-  function filterData(item: Song) {
+  function filterSearch(song: Song): boolean {
+    return (
+      song.title.toLowerCase().includes(query.toLowerCase()) ||
+      song.artist.toLowerCase().includes(query.toLowerCase())
+    );
+  }
+
+  function filterGenres(song: Song): boolean {
+    if (genres.length > 0) {
+      for (const genre of genres) {
+        if (song.genres == genre.title) {
+          return true;
+        }
+      }
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+  function filterChords(song: Song): boolean {
+    if (chords.length > 0) {
+      for (const chordProp of chords) {
+        if (song.chords.includes(chordProp.title)) {
+          return true;
+        }
+      }
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+  function filterDifficulty(song: Song): boolean {
+    return song.difficulty >= difficulty[0] && song.difficulty <= difficulty[1];
+  }
+
+  function filterData(item: Song): React.JSX.Element {
     if (
-      item.title.toLowerCase().includes(query.toLowerCase()) ||
-      item.artist.toLowerCase().includes(query.toLowerCase())
+      filterChords(item) &&
+      filterGenres(item) &&
+      filterDifficulty(item) &&
+      filterSearch(item)
     ) {
       return <Item title={item.title} artist={item.artist} />;
     }
 
-    return null;
+    return <></>;
   }
 
   function onChangeSearch(query: string) {
@@ -75,7 +110,7 @@ function TabsSearch() {
         />
       </View>
       <FlatList
-        data={songs}
+        data={songsAll}
         renderItem={({ item }) => filterData(item)}
         contentContainerStyle={styles.flatList}
       />
@@ -83,7 +118,7 @@ function TabsSearch() {
   );
 }
 
-function Item({ title, artist }: SongProp) {
+function Item({ title, artist }: SongProps) {
   return (
     <View style={styles.itemContainer}>
       <Text style={styles.title}>{title}</Text>
@@ -121,17 +156,8 @@ const styles = StyleSheet.create({
   },
   flatList: {
     paddingTop: 6,
-    paddingBottom: 60,
+    paddingBottom: 500,
   },
-  // itemContainer: {
-  //   backgroundColor: "white",
-  //   padding: 20,
-  //   marginVertical: 6,
-  //   marginHorizontal: 10,
-  //   borderRadius: 25,
-  //   borderColor: "black",
-  //   borderWidth: 2,
-  // },
   itemContainer: {
     backgroundColor: "white",
     padding: 20,
@@ -145,5 +171,14 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 15,
+  },
+  content: {
+    flexDirection: "row",
+    backgroundColor: "white",
+  },
+  sliderContent: {
+    backgroundColor: "white",
+    flexDirection: "column",
+    alignItems: "center",
   },
 });
