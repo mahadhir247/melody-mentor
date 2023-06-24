@@ -4,13 +4,13 @@ import os
 from song_parser import parseSong
 
 config = {
-    "apiKey": "AIzaSyAFwhzUx49em5qCpHEkXgZd7CwdgTdJcQM",
-    "authDomain": "fir-basics-96f5a.firebaseapp.com",
-    "projectId": "fir-basics-96f5a",
-    "storageBucket": "fir-basics-96f5a.appspot.com",
-    "messagingSenderId": "472568474061",
-    "appId": "1:472568474061:web:cac10c72116833f087fc84",
-    "measurementId": "G-WP7T27LQCN",
+    "apiKey": "AIzaSyC0oRGRLhfnZdQtsweJ1Q7VG1fHDLid5ws",
+    "authDomain": "orbitalapp-4da0d.firebaseapp.com",
+    "projectId": "orbitalapp-4da0d",
+    "storageBucket": "orbitalapp-4da0d.appspot.com",
+    "messagingSenderId": "991219715789",
+    "appId": "1:991219715789:web:7edb6e7a1f9adf6d8a2384",
+    "measurementId": "G-7WV1X1TPMS",
     "databaseURL": ""
 }
 
