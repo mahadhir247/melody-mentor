@@ -19,7 +19,7 @@ storage = firebase.storage()
 
 app = Flask(__name__)
 
-@app.route('/')
+@app.route('/<name>')
 def get(name):
     fileName = name + ".gp3"
     storage.child("/gp3/" + fileName).download("", fileName)
