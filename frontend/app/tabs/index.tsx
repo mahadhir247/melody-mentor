@@ -8,8 +8,7 @@ import * as FileSystem from "expo-file-system";
 import * as MediaLibrary from "expo-media-library";
 
 export default function Tabs() {
-  const fileDir = FileSystem.cacheDirectory + "tabs/";
-  const fileUri = fileDir + "Oasis - Wonderwall.wav";
+  const fileUri = FileSystem.cacheDirectory + "Oasis-Wonderwall.wav";
   const [audio, setAudio] = useState<Audio.Sound>();
   const [url, setURL] = useState<string>();
 
@@ -17,14 +16,15 @@ export default function Tabs() {
 
   async function playSound() {
     await downloadFile(url as string);
-    const uri = FileSystem.cacheDirectory + "Oasis - Wonderwall.wav";
 
-    const { sound } = await Audio.Sound.createAsync({ uri: uri });
+    const { sound } = await Audio.Sound.createAsync({ uri: fileUri });
     setAudio(sound);
+    console.log("Playing");
     await sound.playAsync();
   }
 
   async function stopSound() {
+    console.log("Stopping");
     await audio?.stopAsync();
   }
 
@@ -46,33 +46,27 @@ export default function Tabs() {
   }, [audio]);
 
   async function downloadFile(url: string) {
-    const { status } = await MediaLibrary.requestPermissionsAsync();
-
-    if (status !== "granted") {
-      Alert.alert(
-        "Permission needed",
-        "This app requires access to your media library."
-      );
-      return;
-    }
-
-    const saveFile = async (fileUri: string) => {
+    try {
       const directoryInfo = await FileSystem.getInfoAsync(fileUri);
-      if (!directoryInfo.exists) {
-        await FileSystem.makeDirectoryAsync(fileUri, {
-          intermediates: true,
-        });
-      }
-    };
+      const downloadResumable = FileSystem.createDownloadResumable(
+        url,
+        fileUri
+      );
 
-    console.log("Starting Download");
-    FileSystem.downloadAsync(url, fileUri)
-      .then(({ uri }) => {
-        saveFile(uri);
-      })
-      .catch((e) => {
-        console.error(e);
-      });
+      if (!directoryInfo.exists) {
+        console.log("Downloading File...");
+
+        await FileSystem.makeDirectoryAsync(fileUri, { intermediates: true });
+      } else {
+        return;
+      }
+
+      const { uri } =
+        (await downloadResumable.downloadAsync()) as FileSystem.FileSystemDownloadResult;
+      console.log("Finished downloading to ", uri);
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   return (
