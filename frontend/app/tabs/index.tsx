@@ -1,16 +1,18 @@
-import { StyleSheet, Text, View, Button, Alert } from "react-native";
+import { StyleSheet, Text, View, Button } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import { useEffect, useState } from "react";
 import { getStorage, ref, getDownloadURL } from "firebase/storage";
 import { Audio } from "expo-av";
 import * as FileSystem from "expo-file-system";
-import * as MediaLibrary from "expo-media-library";
+import Spinner from "react-native-loading-spinner-overlay";
 
 export default function Tabs() {
-  const fileUri = FileSystem.cacheDirectory + "Oasis-Wonderwall.wav";
+  const fileDir = FileSystem.cacheDirectory + "tabs/";
+  const fileUri = fileDir + "Oasis-Wonderwall.wav";
   const [audio, setAudio] = useState<Audio.Sound>();
   const [url, setURL] = useState<string>();
+  const [loading, setLoading] = useState<boolean>(false);
 
   const storage = getStorage();
 
@@ -18,6 +20,7 @@ export default function Tabs() {
     await downloadFile(url as string);
 
     const { sound } = await Audio.Sound.createAsync({ uri: fileUri });
+
     setAudio(sound);
     console.log("Playing");
     await sound.playAsync();
@@ -47,23 +50,30 @@ export default function Tabs() {
 
   async function downloadFile(url: string) {
     try {
-      const directoryInfo = await FileSystem.getInfoAsync(fileUri);
+      const dirInfo = await FileSystem.getInfoAsync(fileDir);
       const downloadResumable = FileSystem.createDownloadResumable(
         url,
         fileUri
       );
 
-      if (!directoryInfo.exists) {
-        console.log("Downloading File...");
-
-        await FileSystem.makeDirectoryAsync(fileUri, { intermediates: true });
-      } else {
-        return;
+      if (!dirInfo.exists) {
+        await FileSystem.makeDirectoryAsync(fileDir, { intermediates: true });
       }
 
-      const { uri } =
-        (await downloadResumable.downloadAsync()) as FileSystem.FileSystemDownloadResult;
-      console.log("Finished downloading to ", uri);
+      const fileInfo = await FileSystem.getInfoAsync(fileUri);
+
+      if (!fileInfo.exists) {
+        console.log("Downloading File...");
+        setLoading(true);
+
+        const { uri } =
+          (await downloadResumable.downloadAsync()) as FileSystem.FileSystemDownloadResult;
+
+        console.log("Finished downloading to ", uri);
+        setLoading(false);
+      } else {
+        console.log("File already exists locally");
+      }
     } catch (e) {
       console.error(e);
     }
@@ -72,6 +82,8 @@ export default function Tabs() {
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.safeAreaView}>
+        <Spinner visible={loading} />
+
         <Header />
         <Button title="Play" onPress={playSound} />
         <Button title="Stop" onPress={stopSound} />
