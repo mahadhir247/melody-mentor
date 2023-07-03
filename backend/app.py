@@ -19,6 +19,10 @@ storage = firebase.storage()
 
 app = Flask(__name__)
 
+@app.route('/')
+def launch():
+    return "Successfully Launched"
+
 @app.route('/<name>')
 def get(name):
     fileName = name + ".gp3"
