@@ -5,8 +5,9 @@ import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { FIRESTORE_DB } from "../../firebaseConfig";
 import { collection, onSnapshot } from "firebase/firestore";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useRouter } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { useFilter } from "./filterContext";
+import { TouchableOpacity } from "react-native-gesture-handler";
 
 function TabsSearch() {
   const router = useRouter();
@@ -23,7 +24,7 @@ function TabsSearch() {
         const songs: Song[] = [];
         snapshot.docs.forEach((doc) => {
           songs.push({
-            id: doc.id,
+            uid: doc.id,
             title: doc.get("title"),
             artist: doc.get("artist"),
             genres: doc.get("genres"),
@@ -82,7 +83,7 @@ function TabsSearch() {
       filterDifficulty(item) &&
       filterSearch(item)
     ) {
-      return <Item title={item.title} artist={item.artist} />;
+      return <Item {...item} />;
     }
 
     return <></>;
@@ -118,11 +119,21 @@ function TabsSearch() {
   );
 }
 
-function Item({ title, artist }: SongProps) {
+function Item({ title, artist, uid }: Song) {
   return (
     <View style={styles.itemContainer}>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.subtitle}>{artist}</Text>
+      <Link
+        href={{
+          pathname: `/tabs/${uid}`,
+          params: { title: title, artist: artist },
+        }}
+        asChild
+      >
+        <TouchableOpacity>
+          <Text style={styles.title}>{title}</Text>
+          <Text style={styles.subtitle}>{artist}</Text>
+        </TouchableOpacity>
+      </Link>
     </View>
   );
 }
