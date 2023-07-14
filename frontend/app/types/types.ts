@@ -22,6 +22,17 @@ type ChordProps = {
   id: string;
 };
 
+type MeasureProps = {
+  json: SongData | undefined;
+  number: number;
+  instID: number;
+};
+
+type Instrument = {
+  id: number;
+  name: string;
+};
+
 type FilterContextType = {
   setGenres: (genre: GenreProps[]) => void;
   genres: GenreProps[];

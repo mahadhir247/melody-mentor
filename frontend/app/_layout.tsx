@@ -1,43 +1,10 @@
-import { Tabs } from "expo-router";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { Stack } from "expo-router";
 import { Provider } from "./search/filterContext";
 
 export default function Root() {
   return (
     <Provider>
-      <Tabs>
-        <Tabs.Screen
-          name="tabs"
-          options={{
-            title: "Tabs",
-            headerShown: false,
-            tabBarIcon: () => (
-              <Ionicons name="musical-notes" size={24} color="black" />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="search"
-          options={{
-            title: "Search",
-            headerShown: false,
-            tabBarIcon: () => (
-              <Ionicons name="search" size={24} color="black" />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="profile"
-          options={{
-            title: "Profile",
-            headerShown: false,
-            tabBarIcon: () => (
-              <Ionicons name="person" size={24} color="black" />
-            ),
-          }}
-        />
-        <Tabs.Screen name="index" options={{ href: null }} />
-      </Tabs>
+      <Stack screenOptions={{ headerShown: true }} />
     </Provider>
   );
 }

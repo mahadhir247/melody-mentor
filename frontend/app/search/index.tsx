@@ -6,7 +6,7 @@ import { FIRESTORE_DB } from "../../firebaseConfig";
 import { collection, onSnapshot } from "firebase/firestore";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Link, useRouter } from "expo-router";
-import { useFilter } from "./filterContext";
+import { useFilterContext } from "./filterContext";
 import { TouchableOpacity } from "react-native-gesture-handler";
 
 function TabsSearch() {
@@ -14,7 +14,8 @@ function TabsSearch() {
   const [query, setQuery] = useState("");
   const [songsAll, setSongsAll] = useState<Song[]>([]);
 
-  const { genres, chords, difficulty } = useFilter() as FilterContextType;
+  const { genres, chords, difficulty } =
+    useFilterContext() as FilterContextType;
 
   useEffect(() => {
     const songRef = collection(FIRESTORE_DB, "songs");
@@ -125,7 +126,6 @@ function Item({ title, artist, uid }: Song) {
       <Link
         href={{
           pathname: `/tabs/${uid}`,
-          params: { title: title, artist: artist },
         }}
         asChild
       >

@@ -1,35 +1,31 @@
-import { StyleSheet, Text, View, Button } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import { List } from "react-native-paper";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
-import Svg, { Path } from "react-native-svg";
+import Svg, { Path, Circle, Text as TextSvg, G } from "react-native-svg";
 import { useEffect, useState } from "react";
-import { getStorage, ref, getDownloadURL } from "firebase/storage";
 import { Audio } from "expo-av";
-import * as FileSystem from "expo-file-system";
 import Spinner from "react-native-loading-spinner-overlay";
-import { useLocalSearchParams, useSearchParams } from "expo-router";
+import { Stack, useRouter, useSearchParams } from "expo-router";
+import { FlatList } from "react-native-gesture-handler";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { downloadAudioJSON } from "./download";
 
 export default function Tabs() {
+  const router = useRouter();
   const { uid } = useSearchParams<{ uid: string }>();
-  const { title, artist } = useLocalSearchParams<{
-    title: string;
-    artist: string;
-  }>();
-
-  const fileDir = FileSystem.cacheDirectory + "melodymentor/";
-  const fileUri = fileDir + uid + ".wav";
-  const firebaseStorageURL = "audio_files/";
 
   const [audio, setAudio] = useState<Audio.Sound>();
-  const [url, setURL] = useState<string>();
-  const [loading, setLoading] = useState<boolean>(false);
-  const [downloaded, setDownloaded] = useState<boolean>(false);
-
-  const storage = getStorage();
+  const [loading, setLoading] = useState<boolean>(true);
+  const [audioUrl, setAudioUrl] = useState<string>("");
+  const [jsonUrl, setJsonUrl] = useState<string>("");
+  const [json, setJSON] = useState<SongData>();
+  const [inst, setInst] = useState<Instrument>({
+    id: 0,
+    name: "",
+  });
 
   async function playSound() {
-    await downloadFile(url as string);
-
-    const { sound } = await Audio.Sound.createAsync({ uri: fileUri });
+    const { sound } = await Audio.Sound.createAsync({ uri: audioUrl });
 
     setAudio(sound);
     console.log("Playing");
@@ -42,19 +38,36 @@ export default function Tabs() {
   }
 
   useEffect(() => {
-    async function getAudioData() {
-      let storageRef = ref(storage, firebaseStorageURL + uid + ".wav");
-
-      getDownloadURL(storageRef)
-        .then((url) => {
-          setURL(url);
+    async function readJSONData(jsonUrl: string) {
+      fetch(jsonUrl)
+        .then((response) => response.json())
+        .then((json) => {
+          console.log(json["songName"]);
+          setJSON(json);
+          setInst({
+            id: 0,
+            name: json.tracks[0].instrument,
+          });
         })
-        .catch((error) => {
-          console.log(error);
+        .catch((e) => console.error(`Error occured reading JSON data (${e})`));
+    }
+
+    if (audioUrl == "" || jsonUrl == "") {
+      downloadAudioJSON(uid as string)
+        .then(({ audioUrl, jsonUrl }) => {
+          setAudioUrl(audioUrl);
+          setJsonUrl(jsonUrl);
+          readJSONData(jsonUrl);
+        })
+        .catch((e) => {
+          console.error(`Error occured when downloading audio/json (${e})`);
+          router.back();
         });
     }
 
-    getAudioData();
+    if (json !== undefined) {
+      setLoading(false);
+    }
 
     return audio
       ? () => {
@@ -62,36 +75,62 @@ export default function Tabs() {
           audio.unloadAsync();
         }
       : undefined;
-  }, [audio]);
+  }, [audio, json]);
 
-  async function downloadFile(url: string) {
-    try {
-      const dirInfo = await FileSystem.getInfoAsync(fileDir);
-      const downloadResumable = FileSystem.createDownloadResumable(
-        url,
-        fileUri
-      );
-
-      if (!dirInfo.exists) {
-        await FileSystem.makeDirectoryAsync(fileDir, { intermediates: true });
-      }
-
-      if (!downloaded) {
-        console.log("Downloading File...");
-        setLoading(true);
-
-        const { uri } =
-          (await downloadResumable.downloadAsync()) as FileSystem.FileSystemDownloadResult;
-
-        console.log("Finished downloading to ", uri);
-        setLoading(false);
-        setDownloaded(true);
-      } else {
-        console.log("File already downloaded!");
-      }
-    } catch (e) {
-      console.error(e);
+  function getArrayOfMeasures() {
+    let res = [];
+    //If json not loaded return null
+    if (loading) {
+      return [];
     }
+
+    for (let i = 1; i <= json!.tracks[0].measures.length; i++) {
+      res.push(i);
+    }
+
+    return res;
+  }
+
+  function getListElements() {
+    //If json not loaded return null
+    if (loading) {
+      return [];
+    }
+
+    let res = [];
+    for (let i = 0; i < json!.tracks.length; i++) {
+      let instrument: Instrument = {
+        id: i,
+        name: json!.tracks[i].instrument,
+      };
+      res.push(
+        <List.Item
+          title={instrument.name}
+          onPress={() => setInst(instrument)}
+          key={i}
+        />
+      );
+    }
+    return res;
+  }
+
+  /**
+   * Song title and bpm information
+   */
+  function Header({ title, artist }: SongProps) {
+    return (
+      <View style={styles.header}>
+        <View style={styles.headerTitle}>
+          <Text style={styles.titleText}>{`${title} - ${artist}`}</Text>
+        </View>
+        <View style={styles.headerBPM}>
+          <Text style={styles.BPMText}>87 BPM</Text>
+        </View>
+        <List.Section>
+          <List.Accordion title={inst.name}>{getListElements()}</List.Accordion>
+        </List.Section>
+      </View>
+    );
   }
 
   return (
@@ -99,56 +138,109 @@ export default function Tabs() {
       <SafeAreaView style={styles.safeAreaView}>
         <Spinner visible={loading} />
 
-        <Header title={title || ""} artist={artist || ""} />
-        <Button title="Play" onPress={playSound} />
-        <Button title="Stop" onPress={stopSound} />
-
         <View style={styles.container}>
-          <Measure />
-          <Measure />
-          <Measure />
-          <Measure />
-          <Measure />
-          <Measure />
+          <FlatList
+            data={getArrayOfMeasures()}
+            renderItem={({ item }) => (
+              <Measure json={json} number={item} instID={inst.id} />
+            )}
+            ListHeaderComponent={
+              <Header
+                title={!loading ? json!.songName : ""}
+                artist={!loading ? json!.artist : ""}
+              />
+            }
+            extraData={json}
+            keyExtractor={(item, index) => index.toString()}
+          />
+          <TouchableOpacity onPress={playSound} style={styles.playButton}>
+            <Ionicons name="play-outline" size={32} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={stopSound} style={styles.stopButton}>
+            <Ionicons name="stop-outline" size={32} color="white" />
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     </SafeAreaProvider>
   );
 }
 
-/**
- * Song title and bpm information
- */
-function Header({ title, artist }: SongProps) {
+function Measure({ json, number, instID }: MeasureProps) {
+  if (typeof json == "undefined") {
+    return <></>;
+  }
+
+  function numberBackground(x: number, y: number, fretNum: number) {
+    if (fretNum >= 10) {
+      return <Circle cx={x + 8} cy={y - 5} r="7" fill="white" key="1" />;
+    } else {
+      return <Circle cx={x + 4} cy={y - 5} r="5" fill="white" key="1" />;
+    }
+  }
+
+  const staffWidth: number = 370;
+  const xStart = 6; //x coordinate of start of measure
+  const padding: number = 20; //padding between first/last note and bar line
+  const noteStaff = staffWidth - 2 * padding; // area where notes occupy
+
+  let track = json.tracks[instID];
+  let measure = track.measures[number - 1];
+  let voice = measure.voices[0];
+  let tabNumArray: JSX.Element[] = [];
+
+  let x = xStart + padding;
+  let key = 0;
+  for (let beat of voice.beats) {
+    let beatValue = beat.value;
+    for (let note of beat.notes) {
+      let y = 5 + 14 * (note.string - 1);
+      let value = note.value;
+
+      tabNumArray.push(
+        <G key={key}>
+          {numberBackground(x, y, value)}
+          <TextSvg x={x} y={y} fill="black" key="2" fontSize="105%">
+            {value}
+          </TextSvg>
+        </G>
+      );
+      key++;
+    }
+    x += (1 / beatValue) * noteStaff;
+  }
+
   return (
-    <View style={styles.header}>
-      <View style={styles.headerTitle}>
-        <Text style={styles.titleText}>{`${title} - ${artist}`}</Text>
-      </View>
-      <View style={styles.headerBPM}>
-        <Text style={styles.BPMText}>87 BPM</Text>
-      </View>
+    <View style={styles.measureContainer}>
+      <Svg>
+        <Staff width={staffWidth} />
+        {tabNumArray}
+      </Svg>
     </View>
   );
 }
 
-function Measure() {
-  return (
-    <View style={styles.measureContainer}>
-      <Svg
-        width="100%"
-        height="100%"
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
-      >
-        <Path
-          d="M0,0 H100 M0,20 H100 M0,40 H100 M0,60 H100 M0,80 H100 M0,100 H100 M0,0 V100 M100,0 V100"
-          stroke="black"
-          strokeWidth="1"
-        />
-      </Svg>
-    </View>
-  );
+type StaffProps = {
+  width: number;
+};
+
+function Staff({ width }: StaffProps) {
+  let height = 70;
+  let padding = 10;
+  let d = "";
+
+  //Draw horizontal lines
+  let staffWidth = width - 2 * padding;
+  let y = 0;
+  let x = padding;
+  for (let i = 0; i < 6; i++) {
+    d += `M${x},${y} H${staffWidth} `;
+    y += height / 5;
+  }
+
+  //Draw vertical lines
+  d += `M${padding},0 V${height} M${staffWidth},0 V${height}`;
+
+  return <Path d={d} stroke="black" strokeWidth="1" />;
 }
 
 const styles = StyleSheet.create({
@@ -179,9 +271,9 @@ const styles = StyleSheet.create({
     flex: 9,
   },
   measureContainer: {
-    flex: 1,
+    maxHeight: 100,
     margin: 10,
-    padding: 15,
+    paddingTop: 10,
   },
   measure: {
     flex: 1,
@@ -196,5 +288,27 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 36,
     color: "#38434D",
+  },
+  playButton: {
+    position: "absolute",
+    bottom: 10,
+    right: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    width: 50,
+    height: 50,
+    backgroundColor: "dodgerblue",
+    borderRadius: 100,
+  },
+  stopButton: {
+    position: "absolute",
+    bottom: 70,
+    right: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    width: 50,
+    height: 50,
+    backgroundColor: "dodgerblue",
+    borderRadius: 100,
   },
 });

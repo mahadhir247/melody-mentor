@@ -1,7 +1,7 @@
 import { View, TouchableOpacity, FlatList, StyleSheet } from "react-native";
 import { Card, Checkbox, Title } from "react-native-paper";
 import CHORDS from "./chordsList";
-import { useFilter } from "../../filterContext";
+import { useFilterContext } from "../../filterContext";
 
 export default function Chords() {
   return (
@@ -16,10 +16,10 @@ export default function Chords() {
 }
 
 function Item(chord: ChordProps) {
-  const { setChords, chords } = useFilter() as FilterContextType;
+  const { setChords, chords } = useFilterContext() as FilterContextType;
 
   const isChecked = (chord: ChordProps) => {
-    return chords.filter(c => c.title === chord.title).length > 0;
+    return chords.filter((c) => c.title === chord.title).length > 0;
   };
 
   const toggleChords = (chord: ChordProps) => {

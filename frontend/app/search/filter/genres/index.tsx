@@ -1,7 +1,7 @@
 import { View, TouchableOpacity, FlatList, StyleSheet } from "react-native";
 import { Card, Checkbox, Title } from "react-native-paper";
 import GENRES from "./genreList";
-import { useFilter } from "../../filterContext";
+import { useFilterContext } from "../../filterContext";
 
 export default function Genres() {
   return (
@@ -16,7 +16,7 @@ export default function Genres() {
 }
 
 function Item(genre: GenreProps) {
-  const { setGenres, genres } = useFilter() as FilterContextType;
+  const { setGenres, genres } = useFilterContext() as FilterContextType;
 
   const isChecked = (genre: GenreProps) => {
     return genres.filter((g) => g.title === genre.title).length > 0;

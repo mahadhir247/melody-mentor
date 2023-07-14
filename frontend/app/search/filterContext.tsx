@@ -2,7 +2,7 @@ import React, { useState, createContext, useContext } from "react";
 
 const FilterContext = createContext({});
 
-export function useFilter() {
+export function useFilterContext() {
   return useContext(FilterContext);
 }
 

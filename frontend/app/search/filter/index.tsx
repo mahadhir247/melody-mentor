@@ -2,11 +2,11 @@ import { StyleSheet, View, TouchableOpacity } from "react-native";
 import { Card, Title } from "react-native-paper";
 import { useRouter } from "expo-router";
 import MultiSlider from "@ptomasroos/react-native-multi-slider";
-import { useFilter } from "../filterContext";
+import { useFilterContext } from "../filterContext";
 
 export default function Filter() {
   const router = useRouter();
-  const {setDifficulty, difficulty} = useFilter() as FilterContextType;
+  const { setDifficulty, difficulty } = useFilterContext() as FilterContextType;
 
   return (
     <View style={styles.container}>
