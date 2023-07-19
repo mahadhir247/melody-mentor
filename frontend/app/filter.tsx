@@ -2,7 +2,7 @@ import { StyleSheet, View, TouchableOpacity } from "react-native";
 import { Card, Title } from "react-native-paper";
 import { useRouter } from "expo-router";
 import MultiSlider from "@ptomasroos/react-native-multi-slider";
-import { useFilterContext } from "../filterContext";
+import { useFilterContext } from "../context/FilterContext";
 
 export default function Filter() {
   const router = useRouter();
@@ -10,14 +10,14 @@ export default function Filter() {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => router.push("search/filter/chords")}>
+      <TouchableOpacity onPress={() => router.push("filter-options/chords")}>
         <Card style={styles.content}>
           <Card.Content>
             <Title>Chords</Title>
           </Card.Content>
         </Card>
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => router.push("search/filter/genres")}>
+      <TouchableOpacity onPress={() => router.push("filter-options/genres")}>
         <Card style={styles.content}>
           <Card.Content>
             <Title>Genres</Title>

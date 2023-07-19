@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import { StyleSheet, FlatList, View, Text } from "react-native";
 import { Button, Searchbar } from "react-native-paper";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
-import { FIRESTORE_DB } from "../../firebaseConfig";
+import { FIRESTORE_DB } from "../firebaseConfig";
 import { collection, onSnapshot } from "firebase/firestore";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Link, useRouter } from "expo-router";
-import { useFilterContext } from "./filterContext";
+import { useFilterContext } from "../context/FilterContext";
 import { TouchableOpacity } from "react-native-gesture-handler";
 
 function TabsSearch() {
@@ -108,7 +108,7 @@ function TabsSearch() {
         <Button
           style={styles.filterButton}
           icon={() => <Ionicons name="filter" size={32} color="black" />}
-          onPress={() => router.push("search/filter")}
+          onPress={() => router.push("filter")}
         />
       </View>
       <FlatList
@@ -125,7 +125,7 @@ function Item({ title, artist, uid }: Song) {
     <View style={styles.itemContainer}>
       <Link
         href={{
-          pathname: `/tabs/${uid}`,
+          pathname: `/${uid}`,
         }}
         asChild
       >

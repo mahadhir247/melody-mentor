@@ -1,20 +1,24 @@
-import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
-import { List } from "react-native-paper";
+import { StyleSheet, View, TouchableOpacity } from "react-native";
+import { List, PaperProvider } from "react-native-paper";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import Svg, { Path, Circle, Text as TextSvg, G } from "react-native-svg";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Audio } from "expo-av";
 import Spinner from "react-native-loading-spinner-overlay";
-import { Stack, useRouter, useSearchParams } from "expo-router";
+import { useRouter, useSearchParams } from "expo-router";
 import { FlatList } from "react-native-gesture-handler";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { downloadAudioJSON } from "./download";
+import { downloadAudioJSON } from "../src/download";
+import Header from "../components/Tabs/Header";
 
 export default function Tabs() {
   const router = useRouter();
   const { uid } = useSearchParams<{ uid: string }>();
+  const scrollViewRef = useRef<FlatList>(null);
+  const measureRef = useRef<number>(0);
 
   const [audio, setAudio] = useState<Audio.Sound>();
+  const [isPlaying, setPlaying] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [audioUrl, setAudioUrl] = useState<string>("");
   const [jsonUrl, setJsonUrl] = useState<string>("");
@@ -28,15 +32,29 @@ export default function Tabs() {
     const { sound } = await Audio.Sound.createAsync({ uri: audioUrl });
 
     setAudio(sound);
+    setPlaying(true);
     console.log("Playing");
     await sound.playAsync();
   }
 
   async function stopSound() {
     console.log("Stopping");
+    setPlaying(false);
+    measureRef.current = 0;
     await audio?.stopAsync();
   }
 
+  //Unloads sound upon audio change
+  useEffect(() => {
+    return audio
+      ? () => {
+          console.log("Unloading Sound");
+          audio.unloadAsync();
+        }
+      : undefined;
+  }, [audio]);
+
+  //Handles downloading and reading of data
   useEffect(() => {
     async function readJSONData(jsonUrl: string) {
       fetch(jsonUrl)
@@ -68,14 +86,26 @@ export default function Tabs() {
     if (json !== undefined) {
       setLoading(false);
     }
+  }, [json]);
 
-    return audio
-      ? () => {
-          console.log("Unloading Sound");
-          audio.unloadAsync();
+  //Sets interval actions per measure
+  useEffect(() => {
+    const interval = setInterval(
+      () => {
+        if (isPlaying) {
+          measureRef.current++;
+          scrollViewRef.current?.scrollToIndex({
+            index: measureRef.current,
+            animated: false,
+          });
+          console.log(measureRef.current);
         }
-      : undefined;
-  }, [audio, json]);
+      },
+      loading ? 0 : (60000 / json!.tempo) * 4
+    );
+
+    return () => clearInterval(interval);
+  }, [isPlaying]);
 
   function getArrayOfMeasures() {
     let res = [];
@@ -114,58 +144,51 @@ export default function Tabs() {
     return res;
   }
 
-  /**
-   * Song title and bpm information
-   */
-  function Header({ title, artist }: SongProps) {
-    return (
-      <View style={styles.header}>
-        <View style={styles.headerTitle}>
-          <Text style={styles.titleText}>{`${title} - ${artist}`}</Text>
-        </View>
-        <View style={styles.headerBPM}>
-          <Text style={styles.BPMText}>87 BPM</Text>
-        </View>
-        <List.Section>
-          <List.Accordion title={inst.name}>{getListElements()}</List.Accordion>
-        </List.Section>
-      </View>
-    );
-  }
-
   return (
-    <SafeAreaProvider>
-      <SafeAreaView style={styles.safeAreaView}>
-        <Spinner visible={loading} />
+    <PaperProvider>
+      <SafeAreaProvider>
+        <SafeAreaView style={styles.safeAreaView}>
+          <Spinner visible={loading} />
 
-        <View style={styles.container}>
-          <FlatList
-            data={getArrayOfMeasures()}
-            renderItem={({ item }) => (
-              <Measure json={json} number={item} instID={inst.id} />
-            )}
-            ListHeaderComponent={
-              <Header
-                title={!loading ? json!.songName : ""}
-                artist={!loading ? json!.artist : ""}
-              />
-            }
-            extraData={json}
-            keyExtractor={(item, index) => index.toString()}
-          />
-          <TouchableOpacity onPress={playSound} style={styles.playButton}>
-            <Ionicons name="play-outline" size={32} color="white" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={stopSound} style={styles.stopButton}>
-            <Ionicons name="stop-outline" size={32} color="white" />
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    </SafeAreaProvider>
+          <View style={styles.container}>
+            <FlatList
+              data={getArrayOfMeasures()}
+              renderItem={({ item }) => (
+                <Measure
+                  json={json}
+                  number={item}
+                  instID={inst.id}
+                  measureRef={measureRef}
+                />
+              )}
+              ListHeaderComponent={
+                <View>
+                  <Header songData={json} backOnPress={router.back} />
+                  <List.Section>
+                    <List.Accordion title={inst.name}>
+                      {getListElements()}
+                    </List.Accordion>
+                  </List.Section>
+                </View>
+              }
+              extraData={json}
+              keyExtractor={(item, index) => index.toString()}
+              ref={scrollViewRef}
+            />
+            <TouchableOpacity onPress={playSound} style={styles.playButton}>
+              <Ionicons name="play-outline" size={32} color="white" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={stopSound} style={styles.stopButton}>
+              <Ionicons name="stop-outline" size={32} color="white" />
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </SafeAreaProvider>
+    </PaperProvider>
   );
 }
 
-function Measure({ json, number, instID }: MeasureProps) {
+function Measure({ json, number, instID, measureRef }: MeasureProps) {
   if (typeof json == "undefined") {
     return <></>;
   }
@@ -182,6 +205,8 @@ function Measure({ json, number, instID }: MeasureProps) {
   const xStart = 6; //x coordinate of start of measure
   const padding: number = 20; //padding between first/last note and bar line
   const noteStaff = staffWidth - 2 * padding; // area where notes occupy
+  const colour = measureRef.current + 1 === number ? "green" : "black";
+  const strokeWidth = measureRef.current + 1 === number ? 2 : 1;
 
   let track = json.tracks[instID];
   let measure = track.measures[number - 1];
@@ -212,7 +237,7 @@ function Measure({ json, number, instID }: MeasureProps) {
   return (
     <View style={styles.measureContainer}>
       <Svg>
-        <Staff width={staffWidth} />
+        <Staff width={staffWidth} colour={colour} strokeWidth={strokeWidth} />
         {tabNumArray}
       </Svg>
     </View>
@@ -221,9 +246,11 @@ function Measure({ json, number, instID }: MeasureProps) {
 
 type StaffProps = {
   width: number;
+  colour: string;
+  strokeWidth: number;
 };
 
-function Staff({ width }: StaffProps) {
+function Staff({ width, colour, strokeWidth }: StaffProps) {
   let height = 70;
   let padding = 10;
   let d = "";
@@ -240,32 +267,12 @@ function Staff({ width }: StaffProps) {
   //Draw vertical lines
   d += `M${padding},0 V${height} M${staffWidth},0 V${height}`;
 
-  return <Path d={d} stroke="black" strokeWidth="1" />;
+  return <Path d={d} stroke={colour} strokeWidth={strokeWidth} />;
 }
 
 const styles = StyleSheet.create({
   safeAreaView: {
     flex: 1,
-  },
-  header: {
-    flex: 1,
-  },
-  headerTitle: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  titleText: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  headerBPM: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  BPMText: {
-    fontSize: 15,
   },
   container: {
     flex: 9,
@@ -279,16 +286,8 @@ const styles = StyleSheet.create({
     flex: 1,
     margin: 10,
     borderWidth: 1,
-    backgroundColor: "green",
   },
-  title: {
-    fontSize: 64,
-    fontWeight: "bold",
-  },
-  subtitle: {
-    fontSize: 36,
-    color: "#38434D",
-  },
+
   playButton: {
     position: "absolute",
     bottom: 10,

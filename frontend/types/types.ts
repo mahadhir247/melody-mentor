@@ -26,6 +26,7 @@ type MeasureProps = {
   json: SongData | undefined;
   number: number;
   instID: number;
+  measureRef: React.MutableRefObject<number>;
 };
 
 type Instrument = {

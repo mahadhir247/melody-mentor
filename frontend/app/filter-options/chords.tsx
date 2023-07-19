@@ -1,7 +1,7 @@
 import { View, TouchableOpacity, FlatList, StyleSheet } from "react-native";
 import { Card, Checkbox, Title } from "react-native-paper";
 import CHORDS from "./chordsList";
-import { useFilterContext } from "../../filterContext";
+import { useFilterContext } from "../../context/FilterContext";
 
 export default function Chords() {
   return (
