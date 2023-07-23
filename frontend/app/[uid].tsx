@@ -1,4 +1,4 @@
-import { StyleSheet, View, TouchableOpacity } from "react-native";
+import { StyleSheet, View, TouchableOpacity, Dimensions } from "react-native";
 import { List, PaperProvider } from "react-native-paper";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import Svg, { Path, Circle, Text as TextSvg, G } from "react-native-svg";
@@ -98,10 +98,9 @@ export default function Tabs() {
             index: measureRef.current,
             animated: false,
           });
-          console.log(measureRef.current);
         }
       },
-      loading ? 0 : (60000 / json!.tempo) * 4
+      loading ? 0 : (60000 / json!.tempo) * 4 // 4/4 for now
     );
 
     return () => clearInterval(interval);
@@ -201,7 +200,7 @@ function Measure({ json, number, instID, measureRef }: MeasureProps) {
     }
   }
 
-  const staffWidth: number = 370;
+  const staffWidth: number = Dimensions.get("window").width;
   const xStart = 6; //x coordinate of start of measure
   const padding: number = 20; //padding between first/last note and bar line
   const noteStaff = staffWidth - 2 * padding; // area where notes occupy

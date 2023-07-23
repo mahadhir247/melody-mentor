@@ -3,7 +3,7 @@ import { getFirestore } from "firebase/firestore";
 
 // Initialize Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyC0oRGRLhfnZdQtsweJ1Q7VG1fHDLid5ws",
+  apiKey: process.env.FIREBASE_API_KEY,
   authDomain: "orbitalapp-4da0d.firebaseapp.com",
   projectId: "orbitalapp-4da0d",
   storageBucket: "orbitalapp-4da0d.appspot.com",

@@ -10,7 +10,6 @@ export async function downloadAudioJSON(
   uid: string
 ): Promise<{ audioUrl: string; jsonUrl: string }> {
   const storage = getStorage();
-  console.log(uid);
 
   let audioRef = ref(storage, firebaseStorageURL + uid + ".wav");
   let jsonRef = ref(storage, firebaseStorageURL + uid + ".json");
@@ -19,10 +18,7 @@ export async function downloadAudioJSON(
   const jsonDest = fileDir + uid + ".json";
 
   await getDownloadURL(audioRef).then((url) => downloadFile(url, audioDest));
-  console.log("hi");
-  // .catch((e) => console.error(e));
   await getDownloadURL(jsonRef).then((url) => downloadFile(url, jsonDest));
-  // .catch((e) => console.error(e));
 
   return { audioUrl: audioDest, jsonUrl: jsonDest };
 }

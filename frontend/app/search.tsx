@@ -9,6 +9,16 @@ import { Link, useRouter } from "expo-router";
 import { useFilterContext } from "../context/FilterContext";
 import { TouchableOpacity } from "react-native-gesture-handler";
 
+export default function SearchPage() {
+  return (
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.container}>
+        <TabsSearch />
+      </SafeAreaView>
+    </SafeAreaProvider>
+  );
+}
+
 function TabsSearch() {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -135,16 +145,6 @@ function Item({ title, artist, uid }: Song) {
         </TouchableOpacity>
       </Link>
     </View>
-  );
-}
-
-export default function SearchPage() {
-  return (
-    <SafeAreaProvider>
-      <SafeAreaView style={styles.container}>
-        <TabsSearch />
-      </SafeAreaView>
-    </SafeAreaProvider>
   );
 }
 
